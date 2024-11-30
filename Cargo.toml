@@ -1,0 +1,26 @@
+[package]
+name = "aoc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "solutions"
+
+[[bin]]
+name = "aoc"
+path = "src/bin.rs"
+
+[dependencies]
+#num = "0.4.1"
+regex = "1.11.1"
+rudolf-rs = { path = "../rudolf-rs" } 
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "aoc"
+harness = false
+
