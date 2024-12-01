@@ -4,9 +4,9 @@ use std::iter::zip;
 
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
 
-fn part1(input: &str) -> usize {
-    let mut l: Vec<usize> = Vec::new();
-    let mut r: Vec<usize> = Vec::new();
+fn parse(input: &str) -> (Vec<usize>, Vec<usize>) {
+    let mut left: Vec<usize> = Vec::new();
+    let mut right: Vec<usize> = Vec::new();
 
     input.lines().for_each(|line| {
         let mut iter = line.split_whitespace().map(|s| s.parse().unwrap());
@@ -14,38 +14,33 @@ fn part1(input: &str) -> usize {
         let a = iter.next().unwrap();
         let b = iter.next().unwrap();
 
-        l.push(a);
-        r.push(b);
+        left.push(a);
+        right.push(b);
     });
 
-    l.sort();
-    r.sort();
+    (left, right)
+}
 
-    let pairs = zip(l, r);
+fn part1(input: &str) -> usize {
+    let (mut left, mut right) = parse(input);
+
+    left.sort();
+    right.sort();
+
+    let pairs = zip(left, right);
 
     pairs.map(|(a, b)| a.abs_diff(b)).sum()
 }
 
 fn part2(input: &str) -> usize {
-    let mut l: Vec<usize> = Vec::new();
-    let mut r: HashMap<usize, usize> = HashMap::new();
+    let (left, right) = parse(input);
+    let mut freqs: HashMap<usize, usize> = HashMap::new();
 
-    input.lines().for_each(|line| {
-        let mut iter = line.split_whitespace().map(|s| s.parse().unwrap());
+    for e in right {
+        freqs.entry(e).and_modify(|v| *v += 1).or_insert(1);
+    }
 
-        let a = iter.next().unwrap();
-        let b = iter.next().unwrap();
-
-        l.push(a);
-
-        if let Some(freq) = r.get_mut(&b) {
-            *freq += 1;
-        } else {
-            r.insert(b, 1);
-        }
-    });
-
-    l.iter().map(|a| a * r.get(a).unwrap_or(&0)).sum()
+    left.iter().map(|e| e * freqs.get(e).unwrap_or(&0)).sum()
 }
 
 #[cfg(test)]
