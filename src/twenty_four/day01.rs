@@ -37,7 +37,7 @@ fn part2(input: &str) -> usize {
     let mut freqs: HashMap<usize, usize> = HashMap::new();
 
     for e in right {
-        freqs.entry(e).and_modify(|v| *v += 1).or_insert(1);
+        *freqs.entry(e).or_insert(0) += 1;
     }
 
     left.iter().map(|e| e * freqs.get(e).unwrap_or(&0)).sum()
