@@ -9,10 +9,10 @@ fn part1(input: &str) -> usize {
     let mut r: Vec<usize> = Vec::new();
 
     input.lines().for_each(|line| {
-        let mut iter = line.split_whitespace();
+        let mut iter = line.split_whitespace().map(|s| s.parse().unwrap());
 
-        let a = iter.next().unwrap().parse().unwrap();
-        let b = iter.next().unwrap().parse().unwrap();
+        let a = iter.next().unwrap();
+        let b = iter.next().unwrap();
 
         l.push(a);
         r.push(b);
@@ -31,10 +31,10 @@ fn part2(input: &str) -> usize {
     let mut r: HashMap<usize, usize> = HashMap::new();
 
     input.lines().for_each(|line| {
-        let mut iter = line.split_whitespace();
+        let mut iter = line.split_whitespace().map(|s| s.parse().unwrap());
 
-        let a = iter.next().unwrap().parse().unwrap();
-        let b = iter.next().unwrap().parse().unwrap();
+        let a = iter.next().unwrap();
+        let b = iter.next().unwrap();
 
         l.push(a);
 
@@ -45,12 +45,7 @@ fn part2(input: &str) -> usize {
         }
     });
 
-    l.iter()
-        .map(|a| {
-            let f = if let Some(freq) = r.get(a) { *freq } else { 0 };
-            a * f
-        })
-        .sum()
+    l.iter().map(|a| a * r.get(a).unwrap_or(&0)).sum()
 }
 
 #[cfg(test)]
