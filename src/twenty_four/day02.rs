@@ -15,8 +15,14 @@ fn parse(input: &str) -> Vec<Vec<u8>> {
 
 fn is_safe(report: &[u8]) -> bool {
     (report.is_sorted_by(|a, b| a < b) || report.is_sorted_by(|a, b| b < a)) &&
-    // check if the distance between consecutive levels lies in the range 1..4
-    report.windows(2).all(|w| (1..4).contains(&w[0].abs_diff(w[1])))
+    // check if the difference between consecutive levels lies in the range 1..4
+    report
+        .windows(2)
+        .all(|w| {
+            let delta = w[0].abs_diff(w[1]);
+
+            (1..4).contains(&delta)
+        })
 }
 
 fn part1(input: &str) -> usize {
