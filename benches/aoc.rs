@@ -5,7 +5,7 @@ use solutions;
 
 fn criterion_benchmark(c: &mut Criterion) {
     let year = 2024;
-    let day = 1;
+    let day = 2;
 
     let session_key = env::var("AOC_SESSION").unwrap();
     let client = rudolf_rs::Client::new(String::from(session_key));
@@ -33,4 +33,3 @@ criterion_group!{
     targets = criterion_benchmark
 }
 criterion_main!(benches);
-
