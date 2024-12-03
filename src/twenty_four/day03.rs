@@ -2,7 +2,7 @@ use crate::Solution;
 
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
 
-// Improved from initial O(n^2) solution to O(n) by substituting
+// Complexity: O(n). Improved from initial O(n^2) solution by substituting
 // O(n + m) `str.find` pattern matching for O(m * n^2) regex captures. m
 // represents the length of the pattern, and is O(1) for our use case.
 
