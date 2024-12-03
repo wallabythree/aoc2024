@@ -2,7 +2,7 @@ use crate::Solution;
 
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
 
-// Improved from initial O(n^2) solution by substituting
+// Improved from initial O(n^2) solution to O(n) by substituting
 // O(n + m) `str.find` pattern matching for O(m * n^2) regex captures. m
 // represents the length of the pattern, and is O(1) for our use case.
 
@@ -55,13 +55,15 @@ fn extract_all_operands(block: &str, op: &str) -> Vec<(usize, usize)> {
 
     while let Some(i) = subblock.find(op) {
         let off = i + op.len();
+        subblock = &subblock[off..];
 
-        let (operands, len) = extract_operands(&subblock[off..]);
+        let (operands, len) = extract_operands(subblock);
 
         if let Some(pair) = operands {
             ops.push(pair);
         }
-        subblock = &subblock[(off + len)..];
+
+        subblock = &subblock[len..];
     }
 
     ops
