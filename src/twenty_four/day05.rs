@@ -1,5 +1,3 @@
-// solution template
-
 use crate::Solution;
 
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
@@ -22,10 +20,9 @@ mod tests {
     fn test_part1() {
         assert_eq!(part1(TEST_INPUT), 0);
     }
-    
+
     #[test]
     fn test_part2() {
         assert_eq!(part2(TEST_INPUT), TEST_INPUT.len());
     }
 }
-
