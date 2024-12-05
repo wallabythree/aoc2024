@@ -31,12 +31,7 @@ impl<T: Eq + Hash + Clone + Copy> SleighSafetyManual<T> {
         let mut sorted: Vec<_> = update.to_vec();
 
         sorted.sort_by(|a, b| {
-            let lt = self.rule_map.get(b).is_some_and(|v| v.contains(a));
-            let gt = self.rule_map.get(a).is_some_and(|v| v.contains(b));
-
-            if lt {
-                Ordering::Greater
-            } else if gt {
+            if self.rule_map.get(a).is_some_and(|v| v.contains(b)) {
                 Ordering::Less
             } else {
                 Ordering::Equal
