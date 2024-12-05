@@ -6,6 +6,7 @@ use std::cmp::Ordering;
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
 
 struct SleighSafetyManual<T: Eq + Hash> {
+    // maps each page to the set of pages that must not come after it
     rule_map: HashMap<T, HashSet<T>>,
 }
 
