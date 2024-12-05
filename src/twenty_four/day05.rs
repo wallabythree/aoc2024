@@ -78,17 +78,16 @@ fn part1(input: &str) -> usize {
 }
 
 fn part2(input: &str) -> usize {
-    let (rules, mut updates) = parse_input(input);
+    let (rules, updates) = parse_input(input);
     let manual = SleighSafetyManual::from_rules(&rules);
 
     updates
-        .iter_mut()
+        .iter()
         .filter(|update| !manual.validate(update))
         .map(|update| manual.repair(update))
         .map(|update| update[update.len() / 2])
         .sum()
 }
-
 
 #[cfg(test)]
 mod tests {
