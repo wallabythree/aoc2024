@@ -6,7 +6,6 @@ use std::cmp::Ordering;
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
 
 struct SleighSafetyManual<T: Eq + Hash> {
-    // maps each page to the set of pages that must not come after it
     rule_map: HashMap<T, HashSet<T>>,
 }
 
@@ -22,9 +21,28 @@ impl<T: Eq + Hash + Clone + Copy> SleighSafetyManual<T> {
     }
 
     fn validate(&self, update: &[T]) -> bool {
-        update.is_sorted_by(|a, b|
-            !self.rule_map.get(a).is_some_and(|v| v.contains(b))
-        )
+        // 1. Create an empty set of prohibited pages
+        // 2. For each page in the update:
+        //    2.1 If the page is prohibited, the update is invalid
+        //    2.2 Add all pages that should precede the current page
+        //        to the set of prohibited pages
+        // 3. If none of the pages are prohibited, the update is valid
+
+        let mut prohibited: HashSet<T> = HashSet::new();
+
+        for n in update.iter() {
+            if prohibited.contains(n) {
+                return false;
+            }
+
+            if let Some(v) = self.rule_map.get(n) {
+                for m in v {
+                    prohibited.insert(*m);
+                }
+            }
+        }
+
+        true
     }
 
     fn repair(&self, update: &[T]) -> Vec<T> {
