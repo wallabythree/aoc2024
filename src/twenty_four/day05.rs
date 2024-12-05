@@ -34,7 +34,7 @@ impl<T: Eq + Hash + Clone + Copy> SleighSafetyManual<T> {
             if self.rule_map.get(a).is_some_and(|v| v.contains(b)) {
                 Ordering::Less
             } else {
-                Ordering::Equal
+                Ordering::Greater
             }
         });
 
