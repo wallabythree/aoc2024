@@ -14,7 +14,7 @@ fn solutions(
     acc: usize,
     result: usize
 ) -> usize {
-    if operands.is_empty() || acc > result {
+    if acc > result || operands.is_empty() {
         return if acc == result { 1 } else { 0 };
     }
 
