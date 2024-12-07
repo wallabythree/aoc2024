@@ -29,13 +29,13 @@ fn parse_eqs(input: &str) -> Vec<(Vec<usize>, usize)> {
     input
             .lines()
             .map(|l| {
-                let mut ns = l
-                    .split(|c: char| !c.is_ascii_digit())
-                    .filter(|s| !s.is_empty())
-                    .map(|n| n.parse().unwrap());
+                let (n, ns) = l.split_once(':').unwrap();
+                let result = n.parse().unwrap();
+                let operands = ns
+                    .split_whitespace()
+                    .map(|n| n.parse().unwrap())
+                    .collect();
 
-                let result = ns.next().unwrap();
-                let operands = ns.collect();
                 (operands, result)
             })
             .collect()
