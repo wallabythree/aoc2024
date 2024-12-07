@@ -1,5 +1,4 @@
 use crate::Solution;
-use std::usize;
 use std::ops::{ Add, Mul };
 
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
@@ -8,23 +7,22 @@ fn concat(a: usize, b: usize) -> usize {
     a * 10usize.pow(b.ilog10() + 1) + b
 }
 
-fn solutions(
+fn has_solution(
     ops: &[fn (usize, usize) -> usize],
     operands: &[usize],
     acc: usize,
     result: usize
-) -> usize {
+) -> bool {
     if acc > result || operands.is_empty() {
-        return if acc == result { 1 } else { 0 };
+        return acc == result;
     }
 
     ops
         .iter()
-        .map(|op| {
+        .any(|op| {
             let acc = op(acc, operands[0]);
-            solutions(ops, &operands[1..], acc, result)
+            has_solution(ops, &operands[1..], acc, result)
         })
-        .sum()
 }
 
 fn parse_eqs(input: &str) -> Vec<(Vec<usize>, usize)> {
@@ -32,7 +30,7 @@ fn parse_eqs(input: &str) -> Vec<(Vec<usize>, usize)> {
             .lines()
             .map(|l| {
                 let mut ns = l
-                    .split(|c: char| !c.is_digit(10))
+                    .split(|c: char| !c.is_ascii_digit())
                     .filter(|s| !s.is_empty())
                     .map(|n| n.parse().unwrap());
 
@@ -50,7 +48,7 @@ fn part1(input: &str) -> usize {
     eqs
         .iter()
         .filter(|(operands, result)|
-            solutions(&ops, &operands[1..], operands[0], *result) > 0
+            has_solution(&ops, &operands[1..], operands[0], *result)
         )
         .map(|(_, result)| result)
         .sum()
@@ -63,7 +61,7 @@ fn part2(input: &str) -> usize {
     eqs
         .iter()
         .filter(|(operands, result)|
-            solutions(&ops, &operands[1..], operands[0], *result) > 0
+            has_solution(&ops, &operands[1..], operands[0], *result)
         )
         .map(|(_, result)| result)
         .sum()
