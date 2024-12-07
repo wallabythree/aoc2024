@@ -13,7 +13,7 @@ fn has_solution(
     acc: usize,
     result: usize
 ) -> bool {
-    if acc > result || operands.is_empty() {
+    if operands.is_empty() || acc > result {
         return acc == result;
     }
 
