@@ -5,7 +5,11 @@ use solutions;
 
 fn criterion_benchmark(c: &mut Criterion) {
     let year = 2024;
+<<<<<<< HEAD
     let day = 9;
+=======
+    let day = 10;
+>>>>>>> main
 
     let session_key = env::var("AOC_SESSION").unwrap();
     let client = rudolf_rs::Client::new(String::from(session_key));

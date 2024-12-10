@@ -1,17 +1,17 @@
 use crate::Solution;
 use std::ops::{ Add, Mul };
 
-pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
+pub const SOLUTION: Solution<u64, u64> = Solution { part1, part2 };
 
-fn concat(a: usize, b: usize) -> usize {
-    a * 10usize.pow(b.ilog10() + 1) + b
+fn concat(a: u64, b: u64) -> u64 {
+    a * 10u64.pow(b.ilog10() + 1) + b
 }
 
 fn has_solution(
-    ops: &[fn (usize, usize) -> usize],
-    operands: &[usize],
-    acc: usize,
-    result: usize
+    ops: &[fn (u64, u64) -> u64],
+    operands: &[u64],
+    acc: u64,
+    result: u64
 ) -> bool {
     if operands.is_empty() || acc > result {
         return acc == result;
@@ -25,7 +25,7 @@ fn has_solution(
         })
 }
 
-fn parse_eqs(input: &str) -> Vec<(Vec<usize>, usize)> {
+fn parse_eqs(input: &str) -> Vec<(Vec<u64>, u64)> {
     input
             .lines()
             .map(|l| {
@@ -41,9 +41,9 @@ fn parse_eqs(input: &str) -> Vec<(Vec<usize>, usize)> {
             .collect()
 }
 
-fn part1(input: &str) -> usize {
+fn part1(input: &str) -> u64 {
     let eqs = parse_eqs(input);
-    let ops = [usize::add, usize::mul];
+    let ops = [u64::add, u64::mul];
 
     eqs
         .iter()
@@ -54,9 +54,9 @@ fn part1(input: &str) -> usize {
         .sum()
 }
 
-fn part2(input: &str) -> usize {
+fn part2(input: &str) -> u64 {
     let eqs = parse_eqs(input);
-    let ops = [usize::add, usize::mul, concat];
+    let ops = [u64::add, u64::mul, concat];
 
     eqs
         .iter()
