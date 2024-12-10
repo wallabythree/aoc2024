@@ -10,6 +10,21 @@ struct Chunk {
     padding: usize,
 }
 
+fn checksum<I>(chunks: I) -> usize where I: IntoIterator<Item = Chunk> {
+    let mut i = 0;
+    let mut checksum = 0;
+
+    for chunk in chunks {
+        let n = i + chunk.size;
+        let m = (n - i) * (n + i - 1) / 2;
+        checksum += m * chunk.id;
+
+        i += chunk.size + chunk.padding;
+    }
+
+    checksum
+}
+
 fn part1(input: &str) -> usize {
     let mut list: Vec<Option<usize>> = input
         .trim()
@@ -65,17 +80,12 @@ fn part2(input: &str) -> usize {
         .map(|(id, pair)| Chunk { id, size: pair[0], padding: pair[1] })
         .collect();
 
-    let mut in_order = LinkedList::new();
+    let mut defragmented = LinkedList::new();
     let mut moved = HashSet::new();
 
     while let Some(mut chunk) = chunks.pop_back() {
-        if chunks.is_empty() {
-            chunks.push_back(chunk);
-            break;
-        }
-
         if moved.contains(&chunk.id) {
-            in_order.push_front(chunk);
+            defragmented.push_front(chunk);
             continue;
         }
 
@@ -88,13 +98,12 @@ fn part2(input: &str) -> usize {
                 chunk.padding = candidate.padding - chunk.size;
                 candidate.padding = 0;
 
-                cursor.insert_after(chunk);
-                moved.insert(chunk.id);
-
-                if cursor.peek_next().is_some() {
-                    let prev = cursor.back_mut().unwrap();
+                if let Some(prev) = cursor.back_mut() {
                     prev.padding += orig_chunk_padding + chunk.size;
                 }
+
+                cursor.insert_after(chunk);
+                moved.insert(chunk.id);
 
                 break;
             }
@@ -103,24 +112,11 @@ fn part2(input: &str) -> usize {
         }
 
         if !moved.contains(&chunk.id) {
-            in_order.push_front(chunk);
+            defragmented.push_front(chunk);
         }
     }
 
-    chunks.append(&mut in_order);
-
-    let mut i = 0;
-    let mut checksum = 0;
-
-    for chunk in chunks {
-        let n = i + chunk.size;
-        let m = (n - i) * (n + i - 1) / 2;
-        checksum += m * chunk.id;
-
-        i += chunk.size + chunk.padding;
-    }
-
-    checksum
+    checksum(defragmented)
 }
 
 #[cfg(test)]
