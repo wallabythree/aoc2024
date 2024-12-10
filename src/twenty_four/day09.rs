@@ -1,4 +1,5 @@
 use crate::Solution;
+use std::collections::{ HashSet, LinkedList };
 
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
 
@@ -53,7 +54,7 @@ fn part2(input: &str) -> usize {
     let mut input = input.trim().to_string();
     input.push('0');
 
-    let mut allocated: Vec<_> = input
+    let mut chunks: LinkedList<_> = input
         .chars()
         .map(|c| c.to_digit(10).unwrap() as usize)
         .collect::<Vec<_>>()
@@ -64,38 +65,59 @@ fn part2(input: &str) -> usize {
         .map(|(id, pair)| Chunk { id, size: pair[0], padding: pair[1] })
         .collect();
 
-    let mut i = allocated.len() - 1;
+    let mut in_order = LinkedList::new();
+    let mut moved = HashSet::new();
 
-    while i > 1 {
-        for j in 0..allocated.len() {
-            if i <= j {
-                break;
-            }
-
-            if allocated[i].size <= allocated[j].padding {
-                allocated[i - 1].padding += allocated[i].size + allocated[i].padding;
-                allocated[i].padding = allocated[j].padding - allocated[i].size;
-                allocated[j].padding = 0;
-
-                let removed = allocated.remove(i);
-                allocated.insert(j + 1, removed);
-                i += 1;
-                break;
-            }
+    while let Some(mut chunk) = chunks.pop_back() {
+        if chunks.is_empty() {
+            chunks.push_back(chunk);
+            break;
         }
 
-        i -= 1;
+        if moved.contains(&chunk.id) {
+            in_order.push_front(chunk);
+            continue;
+        }
+
+        let mut cursor = chunks.cursor_front_mut();
+
+        while let Some(candidate) = cursor.current() {
+            if chunk.size <= candidate.padding {
+                let orig_chunk_padding = chunk.padding;
+
+                chunk.padding = candidate.padding - chunk.size;
+                candidate.padding = 0;
+
+                cursor.insert_after(chunk);
+                moved.insert(chunk.id);
+
+                if cursor.peek_next().is_some() {
+                    let prev = cursor.back_mut().unwrap();
+                    prev.padding += orig_chunk_padding + chunk.size;
+                }
+
+                break;
+            }
+
+            cursor.move_next();
+        }
+
+        if !moved.contains(&chunk.id) {
+            in_order.push_front(chunk);
+        }
     }
+
+    chunks.append(&mut in_order);
 
     let mut i = 0;
     let mut checksum = 0;
 
-    for chunk in allocated {
-        for j in 0..chunk.size {
-            checksum += (i + j) * chunk.id;
-        }
+    for chunk in chunks {
+        let n = i + chunk.size;
+        let m = (n - i) * (n + i - 1) / 2;
+        checksum += m * chunk.id;
 
-        i += chunk.size + chunk.padding
+        i += chunk.size + chunk.padding;
     }
 
     checksum
