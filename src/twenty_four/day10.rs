@@ -8,7 +8,7 @@ type Dir = (isize, isize);
 
 struct TopoMap {
     grid: Vec<Vec<usize>>,
-    trailheads: Vec<(usize, usize)>,
+    trailheads: Vec<Point>,
 }
 
 impl TopoMap {
@@ -17,13 +17,10 @@ impl TopoMap {
     }
 
     fn width(&self) -> usize {
-        match self.height() {
-            0 => 0,
-            _ => self.grid[0].len(),
-        }
+        if self.height() == 0 { 0 } else { self.grid[0].len() }
     }
 
-    fn validate_move(&self, pos: Point, dir: Dir) -> Option<(usize, usize)> {
+    fn validate_move(&self, pos: Point, dir: Dir) -> Option<Point> {
         let (x, y) = pos;
         let (dx, dy) = dir;
 
@@ -43,7 +40,7 @@ impl TopoMap {
             .is_some_and(|diff| diff == 1)
     }
 
-    fn dfs(&self, pos: Point, visited: &mut HashSet<(usize, usize)>) -> usize {
+    fn dfs(&self, pos: Point, visited: &mut HashSet<Point>) -> usize {
         if visited.contains(&pos) {
             return 0;
         }
