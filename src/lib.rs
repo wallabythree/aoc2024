@@ -1,3 +1,4 @@
+#![feature(linked_list_cursors)]
 use std::fmt::Display;
 
 mod twenty_four;
@@ -28,4 +29,3 @@ pub fn get_solution(year: usize, day: usize) -> &'static dyn Solver {
         _ => panic!(),
     }
 }
-
