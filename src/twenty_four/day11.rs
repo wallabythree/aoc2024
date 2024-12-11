@@ -1,23 +1,23 @@
 use crate::Solution;
 use std::collections::HashMap;
 
-pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
+pub const SOLUTION: Solution<u64, u64> = Solution { part1, part2 };
 
-fn decimals(n: usize) -> u32 {
+fn decimals(n: u64) -> u32 {
     n.checked_ilog10().map_or(1, |e| e + 1)
 }
 
-fn split(n: usize) -> (usize, usize) {
-    let len = 10usize.pow(decimals(n) / 2);
+fn split(n: u64) -> (u64, u64) {
+    let len = 10u64.pow(decimals(n) / 2);
 
     (n / len, n % len)
 }
 
 fn count_splits(
-    stone: usize,
-    blinks: usize,
-    cache: &mut HashMap<(usize,usize), usize>,
-) -> usize {
+    stone: u64,
+    blinks: u64,
+    cache: &mut HashMap<(u64,u64), u64>,
+) -> u64 {
     if blinks == 0 {
         return 0;
     }
@@ -41,18 +41,20 @@ fn count_splits(
     return count;
 }
 
-fn count_stones(stones: &[usize], blinks: usize) -> usize {
+fn count_stones(stones: &[u64], blinks: u64) -> u64 {
     let mut cache = HashMap::new();
 
-    let splits: usize = stones
+    let splits: u64 = stones
         .iter()
         .map(|&stone| count_splits(stone, blinks, &mut cache))
         .sum();
 
-    stones.len() + splits
+    let stone_count: u64 = stones.len().try_into().unwrap();
+
+    stone_count + splits
 }
 
-fn part1(input: &str) -> usize {
+fn part1(input: &str) -> u64 {
     let stones: Vec<_> = input
         .trim()
         .split_whitespace()
@@ -62,7 +64,7 @@ fn part1(input: &str) -> usize {
     count_stones(&stones, 25)
 }
 
-fn part2(input: &str) -> usize {
+fn part2(input: &str) -> u64 {
     let stones: Vec<_> = input
         .trim()
         .split_whitespace()
