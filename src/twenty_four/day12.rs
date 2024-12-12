@@ -21,17 +21,7 @@ impl Point {
 
 type Dir = (isize, isize);
 
-fn vertice_dirs() -> Vec<Dir> {
-    vec![(-1, -1), (1, -1), (1, 1), (-1, 1)]
-}
-
-fn rotate_left(dir: Dir) -> Dir {
-    (dir.1, -dir.0)
-}
-
-fn rotate_right(dir: Dir) -> Dir {
-    (-dir.1, dir.0)
-}
+const VERTICE_DIRS: [Dir; 4] = [(-1, -1), (1, -1), (1, 1), (-1, 1)];
 
 #[derive(Debug)]
 struct Garden {
@@ -93,14 +83,12 @@ impl Garden {
                 (adjacent_x == plant && adjacent_y == plant) ||
                 (adjacent_x != plant && adjacent_y != plant)
             }
-        } else {
-            if let Some(adjacent_x) = adjacent_x {
-                adjacent_x != plant
-            } else if let Some(adjacent_y) = adjacent_y {
+        } else if let Some(adjacent_x) = adjacent_x {
+            adjacent_x != plant
+        } else if let Some(adjacent_y) = adjacent_y {
                 adjacent_y != plant
-            } else {
-                true
-            }
+        } else {
+            true
         }
     }
 
@@ -116,7 +104,7 @@ impl Garden {
         while let Some(pos) = queue.pop_front() {
             visited.insert(pos);
 
-            for v in vertice_dirs() {
+            for &v in VERTICE_DIRS.iter() {
                 if self.is_vertex(pos, v) {
                     vertices += 1;
                 }
@@ -146,53 +134,37 @@ impl Garden {
         (area, perimeter, vertices)
     }
 
-    fn total_fence_price(&self) -> usize {
+    fn total_fence_price(&self) -> (usize, usize) {
         let mut visited = HashSet::new();
-        let mut cost = 0;
+        let mut perimeter_cost = 0;
+        let mut sides_cost = 0;
 
         for y in 0..self.height() {
             for x in 0..self.width() {
                 let pos = Point(x, y);
 
                 if !visited.contains(&pos) {
-                    let (area, perimeter, _) = self.bfs(pos, &mut visited);
-                    cost += area * perimeter;
+                    let (area, perimeter, sides) = self.bfs(pos, &mut visited);
+                    perimeter_cost += area * perimeter;
+                    sides_cost += area * sides;
                 }
             }
         }
 
-        cost
-    }
-
-    fn total_fence_price2(&self) -> usize {
-        let mut visited = HashSet::new();
-        let mut cost = 0;
-
-        for y in 0..self.height() {
-            for x in 0..self.width() {
-                let pos = Point(x, y);
-
-                if !visited.contains(&pos) {
-                    let (area, _, corners) = self.bfs(pos, &mut visited);
-                    cost += area * corners;
-                }
-            }
-        }
-
-        cost
+        (perimeter_cost, sides_cost)
     }
 }
 
 fn part1(input: &str) -> usize {
     let garden = Garden::from(input);
 
-    garden.total_fence_price()
+    garden.total_fence_price().0
 }
 
 fn part2(input: &str) -> usize {
     let garden = Garden::from(input);
 
-    garden.total_fence_price2()
+    garden.total_fence_price().1
 }
 
 #[cfg(test)]
@@ -239,7 +211,7 @@ MIIISIJEEE
 MMMISSJEEE
 ";
 
-    //#[test]
+    #[test]
     fn test_part1() {
         assert_eq!(part1(TEST_INPUT_SMALL), 140);
         assert_eq!(part1(TEST_INPUT_XO), 772);
