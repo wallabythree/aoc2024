@@ -92,7 +92,11 @@ impl Garden {
         }
     }
 
-    fn bfs(&self, start: Point, visited: &mut HashSet<Point>) -> (usize, usize, usize) {
+    fn bfs(
+        &self,
+        start: Point,
+        visited: &mut HashSet<Point>
+    ) -> (usize, usize, usize) {
         let mut area = 0;
         let mut perimeter = 0;
 
