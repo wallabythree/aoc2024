@@ -26,19 +26,17 @@ fn count_splits(
         return count;
     }
 
-    let count;
-
-    if decimals(stone) % 2 == 1 {
-        count = count_splits((stone * 2024).max(1), blinks - 1, cache);
+    let count = if decimals(stone) % 2 == 1 {
+        count_splits((stone * 2024).max(1), blinks - 1, cache)
     } else {
         let (left, right) = split(stone);
 
-        count = 1 + count_splits(left, blinks - 1, cache)
-                  + count_splits(right, blinks - 1, cache);
+        1 + count_splits(left, blinks - 1, cache)
+          + count_splits(right, blinks - 1, cache)
     };
 
     cache.insert((stone, blinks), count);
-    return count;
+    count
 }
 
 fn count_stones(stones: &[u64], blinks: u64) -> u64 {
@@ -56,7 +54,6 @@ fn count_stones(stones: &[u64], blinks: u64) -> u64 {
 
 fn part1(input: &str) -> u64 {
     let stones: Vec<_> = input
-        .trim()
         .split_whitespace()
         .map(|s| s.parse().unwrap())
         .collect();
@@ -66,7 +63,6 @@ fn part1(input: &str) -> u64 {
 
 fn part2(input: &str) -> u64 {
     let stones: Vec<_> = input
-        .trim()
         .split_whitespace()
         .map(|s| s.parse().unwrap())
         .collect();
