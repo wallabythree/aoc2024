@@ -1,6 +1,7 @@
 use crate::Solution;
 
 use std::ops::Add;
+use std::fmt::Display;
 use std::collections::HashSet;
 
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
@@ -64,49 +65,13 @@ impl RobotMap {
         quadrants.iter().flatten().product()
     }
 
-    fn contiguous(&self, p: Point, visited: &mut HashSet<Point>) -> usize {
-        if visited.contains(&p) {
-            return 0;
-        }
-        visited.insert(p);
-
-        let dirs = [Point(0, -1), Point(1, 0), Point(0, 1), Point(-1, 0)];
-
-        1 + self
+    fn distinct_positions(&self) -> usize {
+        self
             .robots
             .iter()
-            .filter(|r| dirs.iter().any(|&d| r.p == p + d))
-            .map(|r| self.contiguous(r.p, visited))
-            .sum::<usize>()
-    }
-
-    fn as_str(&self) -> String {
-        let mut map: Vec<Vec<_>> = (0..self.height)
-            .map(|_| (0..self.width).map(|_| 0).collect())
-            .collect();
-
-        for robot in &self.robots {
-            println!("{:?}", robot);
-            let (x, y) = (robot.p.0 as usize, robot.p.1 as usize);
-            map[y][x] += 1;
-        }
-
-        let mut s = String::new();
-
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let n = map[y as usize][x as usize];
-
-                if n == 0 {
-                    s.push('.');
-                } else {
-                    s.push_str(&n.to_string());
-                }
-            }
-            s.push('\n');
-        }
-
-        s
+            .map(|r| r.p)
+            .collect::<HashSet<_>>()
+            .len()
     }
 
     fn from(input: &str, width: isize, height: isize) -> Self {
@@ -133,6 +98,36 @@ impl RobotMap {
     }
 }
 
+impl Display for RobotMap {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut map: Vec<Vec<_>> = (0..self.height)
+            .map(|_| (0..self.width).map(|_| 0).collect())
+            .collect();
+
+        for robot in &self.robots {
+            let (x, y) = (robot.p.0 as usize, robot.p.1 as usize);
+            map[y][x] += 1;
+        }
+
+        let mut s = String::new();
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let n = map[y as usize][x as usize];
+
+                if n == 0 {
+                    s.push('.');
+                } else {
+                    s.push_str(&n.to_string());
+                }
+            }
+            s.push('\n');
+        }
+
+        write!(f, "{}", s)
+    }
+}
+
 fn part1(input: &str) -> usize {
     let mut map = RobotMap::from(input, 101, 103);
 
@@ -147,29 +142,13 @@ fn part2(input: &str) -> usize {
     let mut map = RobotMap::from(input, 101, 103);
     let mut ticks = 0;
 
-    loop {
-        let mut visited: HashSet<Point> = HashSet::new();
-        let mut contiguous = 0;
-
-        for robot in map.robots.iter() {
-            let p = robot.p;
-
-            if visited.contains(&p) {
-                continue;
-            }
-
-            contiguous = contiguous.max(map.contiguous(p, &mut visited));
-        }
-
-        if contiguous >= 20 {
-            break;
-        }
-
+    while map.distinct_positions() != map.robots.len() {
         map.tick();
         ticks += 1;
     }
 
-    println!("{}", map.as_str());
+    // print our tree
+    println!("{}", map);
 
     ticks
 }
