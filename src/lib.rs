@@ -2,6 +2,7 @@
 use std::fmt::Display;
 
 mod twenty_four;
+mod util;
 
 pub trait Solver {
     fn part1(&self, input: &str) -> Box<dyn Display>;
