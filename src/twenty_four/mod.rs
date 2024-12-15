@@ -14,6 +14,7 @@ mod day12;
 mod day13;
 mod day14;
 mod day15;
+mod day16;
 
 pub fn get_solution(day: usize) -> &'static dyn Solver {
     match day {
@@ -31,6 +32,7 @@ pub fn get_solution(day: usize) -> &'static dyn Solver {
         13 => &day13::SOLUTION,
         14 => &day14::SOLUTION,
         15 => &day15::SOLUTION,
+        16 => &day16::SOLUTION,
         _ => unimplemented!(),
     }
 }
