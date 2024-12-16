@@ -3,16 +3,10 @@
 use std::ops::{ Add, Div, Mul, Neg, Sub };
 use std::hash::Hash;
 use std::collections::{ HashMap, HashSet };
+use std::collections::hash_map::Entry;
 use num::{
-    CheckedAdd,
-    CheckedSub,
-    Integer,
-    NumCast,
-    Signed,
-    ToPrimitive,
-    Unsigned
+    CheckedAdd, CheckedSub, Integer, NumCast, Signed, ToPrimitive, Unsigned
 };
-use Direction::*;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Debug)]
 pub struct Point<T: Integer> {
@@ -69,6 +63,16 @@ impl<T: Integer + Copy> From<(T, T)> for Point<T> {
 impl<T: Integer + Copy> From<Point<T>> for (T, T) {
     fn from(value: Point<T>) -> Self {
         (value.x, value.y)
+    }
+}
+
+impl<T: Integer + Signed + Copy> Point<T> {
+    pub fn rotate_left(&self) -> Self {
+        Self { x: self.y, y: -self.x }
+    }
+
+    pub fn rotate_right(&self) -> Self {
+        Self { x: -self.y, y: self.x }
     }
 }
 
@@ -228,6 +232,14 @@ impl<T: Integer + ToPrimitive + Ord + Hash + Copy, V> PointMap<T, V> {
         self.tiles.insert(p, e)
     }
 
+    pub fn get(&self, p: &Point<T>) -> Option<&V> {
+        self.tiles.get(p)
+    }
+
+    pub fn entry(&mut self, p: Point<T>) -> Entry<'_, Point<T>, V> {
+        self.tiles.entry(p)
+    }
+
     pub fn remove(&mut self, p: Point<T>) -> Option<V> {
         self.tiles.remove(&p)
     }
@@ -241,7 +253,7 @@ pub struct PointSet<T: Integer + Hash> {
 }
 
 impl<T> PointSet<T>
-where T: Integer + ToPrimitive + Ord + Hash + Copy + CheckedAdd + TryFrom<i64>, i64: TryFrom<T>
+where T: Integer + ToPrimitive + Ord + Hash + Copy
 {
     pub fn new() -> Self {
         Self {
@@ -263,6 +275,10 @@ where T: Integer + ToPrimitive + Ord + Hash + Copy + CheckedAdd + TryFrom<i64>, 
         p >= self.min && p <= self.max
     }
 
+    pub fn contains(&self, p: &Point<T>) -> bool {
+        self.tiles.contains(p)
+    }
+
     pub fn insert(&mut self, p: Point<T>) -> bool {
         self.min.x = self.min.x.min(p.x);
         self.min.y = self.min.y.min(p.y);
@@ -274,13 +290,5 @@ where T: Integer + ToPrimitive + Ord + Hash + Copy + CheckedAdd + TryFrom<i64>, 
 
     pub fn remove(&mut self, p: Point<T>) -> bool {
         self.tiles.remove(&p)
-    }
-
-    pub fn neighbours(&mut self, p: Point<T>) -> Vec<Point<T>> {
-        [North, East, South, West]
-            .iter()
-            .filter_map(move |&d| p.checked_add(<Point<i64>>::from(d)))
-            .filter(|p| self.tiles.contains(p))
-            .collect()
     }
 }
