@@ -29,21 +29,19 @@ impl Graph {
         let mut queue = BinaryHeap::new();
         queue.push(Reverse((0, start, East.into())));
 
-        let mut d: HashMap<Point<i64>, Cost> = self
+        let mut costs: HashMap<Point<i64>, Cost> = self
             .nodes
             .iter()
             .map(|&node| (node, Cost::MAX))
             .collect();
 
-        let mut f: HashMap<(Point<i64>, Point<i64>), Cost> = HashMap::new();
+        let mut visited: HashSet<(Point<i64>, Point<i64>)> = HashSet::new();
 
-        d.insert(start, 0);
-        f.insert((start, East.into()), 0);
+        costs.insert(start, 0);
+        visited.insert((start, East.into()));
 
         while let Some(Reverse((cost, node, dir))) = queue.pop() {
-            println!("{:?}", node);
-
-            f.insert((node, dir), cost);
+            visited.insert((node, dir));
 
             let edges = [
                 (self.neighbour(node, dir), dir, 1),
@@ -55,13 +53,13 @@ impl Graph {
                 let new_cost = cost + n_cost;
 
                 if let Some(neighbour) = neighbour_opt {
-                    if f.contains_key(&(neighbour, n_dir)) {
+                    if visited.contains(&(neighbour, n_dir)) {
                         continue;
                     }
 
-                    if let Some(&current_cost) = d.get(&neighbour) {
+                    if let Some(&current_cost) = costs.get(&neighbour) {
                         if current_cost > new_cost {
-                            d.insert(neighbour, new_cost);
+                            costs.insert(neighbour, new_cost);
                         }
 
                         queue.retain(|&Reverse((_, node, dir))| {
@@ -73,7 +71,7 @@ impl Graph {
             }
         }
 
-        d
+        costs
     }
 }
 
@@ -111,11 +109,9 @@ impl TryFrom<&str> for Graph {
 
 fn part1(input: &str) -> Cost {
     let graph: Graph = Graph::try_from(input).unwrap();
-    println!("{:?}", graph);
 
     let result = graph.dijkstra(graph.start);
     let end_cost = result.get(&graph.end);
-    println!("dijkstra: {:?}", end_cost);
 
     *end_cost.unwrap()
 }
