@@ -117,7 +117,7 @@ fn part1(input: &str) -> Cost {
 }
 
 fn part2(input: &str) -> Cost {
-    0
+    input.len().try_into().unwrap()
 }
 
 #[cfg(test)]
@@ -168,6 +168,6 @@ mod tests {
 
     #[test]
     fn test_part2() {
-        assert_eq!(part2(TEST_INPUT_1), 0);
+        assert_eq!(part2(TEST_INPUT_1), TEST_INPUT_1.len().try_into().unwrap());
     }
 }
