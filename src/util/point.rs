@@ -3,7 +3,7 @@
 use std::ops::{ Add, Div, Mul, Neg, Sub };
 use std::hash::Hash;
 use std::collections::HashMap;
-use num::{ NumCast, Integer, Signed };
+use num::{ Integer, NumCast, Signed, ToPrimitive, Unsigned };
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Debug)]
 pub struct Point<T: Integer> {
@@ -35,7 +35,7 @@ impl<T: Integer> Sub for Point<T> {
     }
 }
 
-impl<T: Integer + Clone + Copy> Mul<T> for Point<T> {
+impl<T: Integer + Copy> Mul<T> for Point<T> {
     type Output = Self;
 
     fn mul(self, rhs: T) -> Self::Output {
@@ -43,7 +43,7 @@ impl<T: Integer + Clone + Copy> Mul<T> for Point<T> {
     }
 }
 
-impl<T: Integer + Clone + Copy> Div<T> for Point<T> {
+impl<T: Integer + Copy> Div<T> for Point<T> {
     type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
@@ -51,13 +51,13 @@ impl<T: Integer + Clone + Copy> Div<T> for Point<T> {
     }
 }
 
-impl<T: Integer + Clone + Copy> From<(T, T)> for Point<T> {
+impl<T: Integer + Copy> From<(T, T)> for Point<T> {
     fn from(value: (T, T)) -> Self {
         Self { x: value.0, y: value.1 }
     }
 }
 
-impl<T: Integer + Clone + Copy> From<Point<T>> for (T, T) {
+impl<T: Integer + Copy> From<Point<T>> for (T, T) {
     fn from(value: Point<T>) -> Self {
         (value.x, value.y)
     }
@@ -72,13 +72,13 @@ impl<T: Integer + Copy + TryInto<usize>> Point<T> {
     }
 }
 
-impl From<Direction> for Point<i64> {
+impl<T: Integer + Signed + Copy> From<Direction> for Point<T> {
     fn from(dir: Direction) -> Self {
         match dir {
-            Direction::North => (0, -1).into(),
-            Direction::East => (1, 0).into(),
-            Direction::South => (0, 1).into(),
-            Direction::West => (-1, 0).into(),
+            Direction::North => (T::zero(), -T::one()).into(),
+            Direction::East => (T::one(), T::zero()).into(),
+            Direction::South => (T::zero(), T::one()).into(),
+            Direction::West => (-T::one(), T::zero()).into(),
         }
     }
 }
@@ -148,7 +148,7 @@ pub struct PointMap<T: Integer + Hash, V> {
     max: Point<T>,
 }
 
-impl<T: Integer + Signed + NumCast + Ord + Hash + Copy, V> PointMap<T, V> {
+impl<T: Integer + Signed + ToPrimitive + Ord + Hash + Copy, V> PointMap<T, V> {
     pub fn new() -> Self {
         Self {
             tiles: HashMap::new(),
@@ -157,12 +157,12 @@ impl<T: Integer + Signed + NumCast + Ord + Hash + Copy, V> PointMap<T, V> {
         }
     }
 
-    pub fn width(&self) -> u64 {
-        self.max.x.sub(self.min.x).abs().to_u64().expect("Conversion error")
+    pub fn width<U: Integer + Unsigned + NumCast>(&self) -> U {
+        U::from(self.max.x.sub(self.min.x).abs()).expect("Conversion error")
     }
 
-    pub fn height(&self) -> u64 {
-        self.max.y.sub(self.min.y).abs().to_u64().expect("Conversion error")
+    pub fn height<U: Integer + Unsigned + NumCast>(&self) -> U {
+        U::from(self.max.y.sub(self.min.y).abs()).expect("Conversion error")
     }
 
     pub fn in_bounds(&self, p: Point<T>) -> bool {
