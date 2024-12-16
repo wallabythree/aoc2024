@@ -1,24 +1,25 @@
 use crate::Solution;
 use crate::util::point::Point;
-use std::{collections::{HashMap, VecDeque}, fmt::Debug};
+use std::collections::{HashMap, VecDeque};
+use std::fmt::Debug;
 
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
 
-impl Point {
-    fn gps(&self) -> isize {
-        self.1 * 100 + self.0
+impl Point<i64> {
+    fn gps(&self) -> i64 {
+        self.y * 100 + self.x
     }
 }
 
-impl TryFrom<char> for Point {
+impl TryFrom<char> for Point<i64> {
     type Error = String;
 
     fn try_from(c: char) -> Result<Self, Self::Error> {
         match c {
-            '^' => Ok(Point(0, -1)),
-            '>' => Ok(Point(1, 0)),
-            'v' => Ok(Point(0, 1)),
-            '<' => Ok(Point(-1, 0)),
+            '^' => Ok((0, -1).into()),
+            '>' => Ok((1, 0).into()),
+            'v' => Ok((0, 1).into()),
+            '<' => Ok((-1, 0).into()),
             _ => Err(format!("Invalid direction: '{}'", c)),
         }
     }
@@ -52,14 +53,14 @@ impl TryFrom<char> for Obstacle {
 }
 
 struct Warehouse {
-    robot: Point,
-    obstacles: HashMap<isize, HashMap<isize, Obstacle>>,
+    robot: Point<i64>,
+    obstacles: HashMap<i64, HashMap<i64, Obstacle>>,
     width: usize,
     height: usize,
 }
 
 impl Warehouse {
-    fn attempt_move(&mut self, dir: Point) {
+    fn attempt_move(&mut self, dir: Point<i64>) {
         let can_move = self.can_move(self.robot, dir);
 
         if can_move {
@@ -68,25 +69,25 @@ impl Warehouse {
         }
     }
 
-    fn can_move(&self, pos: Point, dir: Point) -> bool {
+    fn can_move(&self, pos: Point<i64>, dir: Point<i64>) -> bool {
         let next_pos = pos + dir;
         let next = self
             .obstacles
-            .get(&next_pos.1)
-            .and_then(|xs| xs.get(&next_pos.0));
+            .get(&next_pos.y)
+            .and_then(|xs| xs.get(&next_pos.x));
 
         match next {
             None => true,
             Some(Obstacle::Wall) => false,
-            _ if dir.1 == 0 => self.can_move(next_pos, dir),
+            _ if dir.y == 0 => self.can_move(next_pos, dir),
             Some(Obstacle::Box(BoxType::Left)) => {
                 let left = self.can_move(next_pos, dir);
-                let right = self.can_move(next_pos + Point(1, 0), dir);
+                let right = self.can_move(next_pos + (1, 0).into(), dir);
 
                 left && right
             },
             Some(Obstacle::Box(BoxType::Right)) => {
-                let left = self.can_move(next_pos + Point(-1, 0), dir);
+                let left = self.can_move(next_pos + (-1, 0).into(), dir);
                 let right = self.can_move(next_pos, dir);
 
                 left && right
@@ -95,49 +96,51 @@ impl Warehouse {
         }
     }
 
-    fn execute_move(&mut self, pos: Point, dir: Point) {
+    fn execute_move(&mut self, pos: Point<i64>, dir: Point<i64>) {
         let next_pos = pos + dir;
         let next = self
             .obstacles
-            .get(&next_pos.1)
-            .and_then(|xs| xs.get(&next_pos.0));
+            .get(&next_pos.y)
+            .and_then(|xs| xs.get(&next_pos.x));
 
         match next {
             None => (),
             Some(Obstacle::Wall) => return,
-            _ if dir.1 == 0 => self.execute_move(next_pos, dir),
+            _ if dir.y == 0 => self.execute_move(next_pos, dir),
             Some(Obstacle::Box(BoxType::Left)) => {
                 self.execute_move(next_pos, dir);
-                self.execute_move(next_pos + Point(1,0), dir);
+                self.execute_move(next_pos + (1,0).into(), dir);
             },
             Some(Obstacle::Box(BoxType::Right)) => {
                 self.execute_move(next_pos, dir);
-                self.execute_move(next_pos + Point(-1,0), dir);
+                self.execute_move(next_pos + (-1,0).into(), dir);
             },
             _ => self.execute_move(next_pos, dir),
         }
 
         self
             .obstacles
-            .get_mut(&pos.1)
-            .and_then(|xs| xs.remove(&pos.0))
+            .get_mut(&pos.y)
+            .and_then(|xs| xs.remove(&pos.x))
             .and_then(|o| self
                 .obstacles
-                .entry(next_pos.1)
+                .entry(next_pos.y)
                 .or_default()
-                .insert(next_pos.0, o)
+                .insert(next_pos.x, o)
             );
     }
 
-    fn gps_sum(&self) -> isize {
+    fn gps_sum(&self) -> i64 {
         self
             .obstacles
             .iter()
             .flat_map(|(y, xs)| xs
                 .iter()
                 .filter_map(|(x, o)| match o {
-                    Obstacle::Box(BoxType::Single) => Some(Point(*x, *y).gps()),
-                    Obstacle::Box(BoxType::Left) => Some(Point(*x, *y).gps()),
+                    Obstacle::Box(BoxType::Single) =>
+                        Some(Point { x: *x, y: *y }.gps()),
+                    Obstacle::Box(BoxType::Left) =>
+                        Some(Point { x: *x, y: *y }.gps()),
                     _ => None,
                 })
             )
@@ -154,7 +157,7 @@ impl TryFrom<&str> for Warehouse {
 
         let mut robot_pos = None;
 
-        let obstacles: HashMap<isize, HashMap<isize, Obstacle>> = map_str
+        let obstacles: HashMap<i64, HashMap<i64, Obstacle>> = map_str
             .lines()
             .enumerate()
             .map(|(y, l)| {
@@ -169,7 +172,7 @@ impl TryFrom<&str> for Warehouse {
                             Some((x, o))
                         } else {
                             if c == '@' {
-                                robot_pos = Some(Point(x, y))
+                                robot_pos = Some((x, y).into())
                             }
 
                             None
@@ -204,7 +207,7 @@ impl Debug for Warehouse {
             }
         }
 
-        let (r_x, r_y) = (self.robot.0 as usize, self.robot.1 as usize);
+        let (r_x, r_y): (usize, usize) = self.robot.usized().unwrap();
         v[r_y][r_x] = '@';
 
         let mut s = String::new();
@@ -221,7 +224,7 @@ impl Debug for Warehouse {
 fn part1(input: &str) -> usize {
     let (map_str, moves_str) = input.split_once("\n\n").unwrap();
     let mut warehouse = Warehouse::try_from(map_str).unwrap();
-    let moves: VecDeque<Point> = moves_str
+    let moves: VecDeque<Point<i64>> = moves_str
         .chars()
         .filter(|&c| c != '\n')
         .map(Point::try_from)
@@ -250,7 +253,7 @@ fn part2(input: &str) -> usize {
         .collect();
 
     let mut warehouse = Warehouse::try_from(widened.as_str()).unwrap();
-    let moves: VecDeque<Point> = moves_str
+    let moves: VecDeque<Point<i64>> = moves_str
         .chars()
         .filter(|&c| c != '\n')
         .map(Point::try_from)
