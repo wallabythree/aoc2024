@@ -243,20 +243,27 @@ fn part1(input: &str) -> String {
 }
 
 fn part2(input: &str) -> usize {
-    let mut a = 0;
     let mut vm = VM::try_from(input).unwrap();
+    let mut a: i64 = -1;
 
-    while vm.output != vm.text {
-        println!("A: {:?}", a);
+    for i in 0.. {
+        while vm.output.len() <= i || !vm.text.ends_with(&vm.output) {
+            a += 1;
 
-        vm.reset();
-        vm.regs[0] = a;
-        vm.run();
+            vm.reset();
+            vm.regs[0] = a;
+            vm.run();
+        }
 
-        a += 1;
+        if vm.output == vm.text {
+            break;
+        }
+
+        a *= 8;
+        a -= 1;
     }
 
-    (a - 1).try_into().unwrap()
+    a.try_into().unwrap()
 }
 
 #[cfg(test)]
