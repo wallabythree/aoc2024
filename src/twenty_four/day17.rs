@@ -134,8 +134,6 @@ impl VM {
             Instruction::Jnz(operand) => {
                 let a = self.read(Register(0));
 
-                //println!("\tA: {:?}", a);
-
                 if a != 0 {
                     self.ip = operand.0.try_into().expect("Invalid ip");
                     jumped = true;
@@ -149,7 +147,6 @@ impl VM {
             Instruction::Out(operand) => {
                 let val = self.deref_combo(operand);
                 let result = (val & 7) as u8;
-                //println!("{:?}: {:?} {:?}", operand, val, result);
                 self.output.push(result);
             },
             Instruction::Bdv(operand) => {
@@ -161,7 +158,6 @@ impl VM {
         }
 
         if !jumped {
-            //println!("\tDid not jump!");
             self.ip += 2;
         }
     }
@@ -171,9 +167,6 @@ impl VM {
             self.text[self.ip],
             self.text[self.ip + 1])
             .try_into().expect("Invalid instruction");
-
-        //println!("{:?}", self);
-        //println!("\tstepping {:?}", instruction);
 
         self.execute(instruction);
     }
@@ -235,10 +228,7 @@ impl TryFrom<&str> for VM {
 
 fn part1(input: &str) -> String {
     let mut vm = VM::try_from(input).unwrap();
-    println!("{:?}", vm);
     vm.run();
-    println!("{:?}", vm);
-
     vm.output()
 }
 
