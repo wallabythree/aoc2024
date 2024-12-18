@@ -253,7 +253,7 @@ pub struct PointSet<T: Integer + Hash> {
 }
 
 impl<T> PointSet<T>
-where T: Integer + ToPrimitive + Ord + Hash + Copy
+where T: Integer + ToPrimitive + CheckedAdd + TryFrom<i64> + Ord + Hash + Copy, i64: TryFrom<T>
 {
     pub fn new() -> Self {
         Self {
@@ -271,8 +271,26 @@ where T: Integer + ToPrimitive + Ord + Hash + Copy
         U::from(self.max.y.sub(self.min.y)).expect("Conversion error")
     }
 
+    pub fn set_min(&mut self, min: Point<T>) {
+        self.min = min;
+    }
+
+    pub fn set_max(&mut self, max: Point<T>) {
+        self.max = max;
+    }
+
     pub fn in_bounds(&self, p: Point<T>) -> bool {
-        p >= self.min && p <= self.max
+        p.x >= self.min.x && p.x <= self.max.x &&
+        p.y >= self.min.y && p.y <= self.max.y
+    }
+
+    pub fn neighbours(&self, p: Point<T>) -> Vec<Point<T>> {
+        [Direction::North, Direction::East, Direction::South, Direction::West]
+            .iter()
+            .filter_map(|&d| p.checked_add::<i64>(d.into()))
+            .filter_map(|n_p| self.tiles.get(&n_p))
+            .copied()
+            .collect()
     }
 
     pub fn contains(&self, p: &Point<T>) -> bool {
@@ -280,6 +298,10 @@ where T: Integer + ToPrimitive + Ord + Hash + Copy
     }
 
     pub fn insert(&mut self, p: Point<T>) -> bool {
+        self.tiles.insert(p)
+    }
+
+    pub fn insert_and_update_bounds(&mut self, p: Point<T>) -> bool {
         self.min.x = self.min.x.min(p.x);
         self.min.y = self.min.y.min(p.y);
         self.max.x = self.max.x.max(p.x);
