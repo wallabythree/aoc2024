@@ -38,7 +38,7 @@ impl Memory {
             .collect()
     }
 
-    fn bfs(&self, start: Point<u64>, end: Point<u64>) -> usize {
+    fn bfs(&self, start: Point<u64>, end: Point<u64>) -> Option<usize> {
         let mut level = VecDeque::new();
         let mut frontier = VecDeque::new();
         let mut visited = HashSet::new();
@@ -48,12 +48,12 @@ impl Memory {
         let mut cost = 0;
 
         while let Some(node) = level.pop_front() {
-            println!("visiting: {:?}\t cost: {:?}", node, cost);
+            //println!("visiting: {:?}\t cost: {:?}", node, cost);
 
             visited.insert(node);
 
             if node == end {
-                break;
+                return Some(cost);
             }
 
             for neighbour in self.neighbours(node) {
@@ -72,11 +72,22 @@ impl Memory {
             }
         }
 
-        cost
+        None
     }
 
-    fn solve(&self) -> usize {
+    fn solve(&self) -> Option<usize> {
         self.bfs((0,0).into(), self.size)
+    }
+
+    fn solve2(&mut self) -> Point<u64> {
+        let mut byte = None;
+
+        while let Some(_) = self.solve() {
+            byte = Some(self.falling.front().unwrap().clone());
+            self.tick();
+        }
+
+        byte.unwrap()
     }
 }
 
@@ -112,16 +123,19 @@ impl TryFrom<(&str, Point<u64>)> for Memory {
 fn part1(input: &str) -> usize {
     let mut memory = Memory::try_from((input, (70, 70).into())).unwrap();
     memory.advance(1024);
-    memory.solve()
+    memory.solve().unwrap()
 }
 
 fn part2(input: &str) -> String {
-    input.to_string()
+    let mut memory = Memory::try_from((input, (70, 70).into())).unwrap();
+    let byte = memory.solve2();
+
+    format!("{},{}", byte.x, byte.y)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Memory, part2};
+    use super::Memory;
 
     const TEST_INPUT: &str = "5,4
 4,2
@@ -154,11 +168,14 @@ mod tests {
     fn test_part1() {
         let mut memory = Memory::try_from((TEST_INPUT, (6, 6).into())).unwrap();
         memory.advance(12);
-        assert_eq!(memory.solve(), 22);
+        assert_eq!(memory.solve().unwrap(), 22);
     }
 
     #[test]
     fn test_part2() {
-        assert_eq!(part2(TEST_INPUT), "6,1".to_string());
+        let mut memory = Memory::try_from((TEST_INPUT, (6, 6).into())).unwrap();
+        let byte = memory.solve2();
+
+        assert_eq!(format!("{},{}", byte.x, byte.y), "6,1".to_string());
     }
 }
