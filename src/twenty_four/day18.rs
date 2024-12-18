@@ -24,17 +24,15 @@ impl Memory {
         }
     }
 
-    fn in_bounds(&self, p: Point<u64>) -> bool {
-        p.x <= self.size.x &&
-        p.y <= self.size.y
+    fn in_bounds(&self, p: &Point<u64>) -> bool {
+        p.x <= self.size.x && p.y <= self.size.y
     }
 
     fn neighbours(&self, p: Point<u64>) -> Vec<Point<u64>> {
         [North, East, South, West]
             .iter()
             .filter_map(|&d| p.checked_add::<i64>(d.into()))
-            .filter(|&n_p| self.in_bounds(n_p))
-            .filter(|n_p| !self.fallen.contains(n_p))
+            .filter(|n_p| self.in_bounds(n_p) && !self.fallen.contains(n_p))
             .collect()
     }
 
@@ -44,24 +42,22 @@ impl Memory {
         let mut visited = HashSet::new();
 
         level.push_back(start);
+        visited.insert(start);
 
         let mut cost = 0;
 
         while let Some(node) = level.pop_front() {
-            //println!("visiting: {:?}\t cost: {:?}", node, cost);
-
-            visited.insert(node);
-
             if node == end {
                 return Some(cost);
             }
 
             for neighbour in self.neighbours(node) {
-                if visited.contains(&neighbour) || level.contains(&neighbour) || frontier.contains(&neighbour) {
+                if visited.contains(&neighbour) {
                     continue;
                 }
 
                 frontier.push_back(neighbour);
+                visited.insert(neighbour);
             }
 
             if level.is_empty() {
