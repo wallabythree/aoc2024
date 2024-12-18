@@ -14,10 +14,8 @@ path = "src/bin.rs"
 
 [dependencies]
 num = "0.4.3"
-num-traits = "0.2.19"
-#num = "0.4.1"
 regex = "1.11.1"
-rudolf-rs = { path = "../rudolf-rs" } 
+rudolf-rs = { path = "../rudolf-rs" }
 
 [dev-dependencies]
 criterion = "0.5.1"
@@ -25,4 +23,3 @@ criterion = "0.5.1"
 [[bench]]
 name = "aoc"
 harness = false
-
