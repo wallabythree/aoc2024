@@ -1,4 +1,4 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::{ HashMap, HashSet, VecDeque };
 use std::error::Error;
 
 use crate::Solution;
@@ -36,54 +36,95 @@ impl Memory {
             .collect()
     }
 
-    fn bfs(&self, start: Point<u64>, end: Point<u64>) -> Option<usize> {
+    fn bfs(
+        &self,
+        start: Point<u64>,
+        end: Point<u64>
+    ) -> HashMap<Point<u64>, Point<u64>> {
         let mut level = VecDeque::new();
         let mut frontier = VecDeque::new();
-        let mut visited = HashSet::new();
+        let mut edges = HashMap::new();
 
         level.push_back(start);
-        visited.insert(start);
-
-        let mut cost = 0;
+        edges.insert(start, start);
 
         while let Some(node) = level.pop_front() {
             if node == end {
-                return Some(cost);
+                break;
             }
 
             for neighbour in self.neighbours(node) {
-                if visited.contains(&neighbour) {
+                if edges.contains_key(&neighbour) {
                     continue;
                 }
 
                 frontier.push_back(neighbour);
-                visited.insert(neighbour);
+                edges.insert(neighbour, node);
             }
 
             if level.is_empty() {
                 level = frontier;
                 frontier = VecDeque::new();
-
-                cost += 1;
             }
+        }
+
+        edges
+    }
+
+    fn reconstruct_path(
+        edges: &HashMap<Point<u64>, Point<u64>>,
+        start: Point<u64>,
+        end: Point<u64>,
+    ) -> Option<VecDeque<Point<u64>>> {
+        let mut current = end;
+        let mut path = VecDeque::new();
+        path.push_front(end);
+
+        while let Some(&node) = edges.get(&current) {
+            if node == current {
+                return None;
+            }
+
+            path.push_front(node);
+
+            if node == start {
+                return Some(path);
+            }
+
+            current = node;
         }
 
         None
     }
 
-    fn solve(&self) -> Option<usize> {
-        self.bfs((0,0).into(), self.size)
+    fn shortest_path(
+        &self,
+        start: Point<u64>,
+        end: Point<u64>
+    ) -> Option<VecDeque<Point<u64>>> {
+        let edges = self.bfs(start, end);
+        Memory::reconstruct_path(&edges, start, end)
     }
 
-    fn solve2(&mut self) -> Point<u64> {
-        let mut byte = None;
+    fn solve(&self) -> Option<VecDeque<Point<u64>>> {
+        self.shortest_path((0,0).into(), self.size)
+    }
 
-        while let Some(_) = self.solve() {
-            byte = Some(self.falling.front().unwrap().clone());
-            self.tick();
+    fn part1(&self) -> Option<usize> {
+        self.solve().map(|path| path.len() - 1)
+    }
+
+    fn part2(&mut self) -> Option<Point<u64>> {
+        let mut byte = self.falling.front().copied();
+
+        while let Some(path) = self.solve() {
+            while byte.is_some_and(|b|!path.contains(&b)) {
+                byte = self.falling.front().copied();
+                self.tick();
+            }
         }
 
-        byte.unwrap()
+        byte
     }
 }
 
@@ -119,12 +160,12 @@ impl TryFrom<(&str, Point<u64>)> for Memory {
 fn part1(input: &str) -> usize {
     let mut memory = Memory::try_from((input, (70, 70).into())).unwrap();
     memory.advance(1024);
-    memory.solve().unwrap()
+    memory.part1().unwrap()
 }
 
 fn part2(input: &str) -> String {
     let mut memory = Memory::try_from((input, (70, 70).into())).unwrap();
-    let byte = memory.solve2();
+    let byte = memory.part2().unwrap();
 
     format!("{},{}", byte.x, byte.y)
 }
@@ -164,13 +205,13 @@ mod tests {
     fn test_part1() {
         let mut memory = Memory::try_from((TEST_INPUT, (6, 6).into())).unwrap();
         memory.advance(12);
-        assert_eq!(memory.solve().unwrap(), 22);
+        assert_eq!(memory.part1().unwrap(), 22);
     }
 
     #[test]
     fn test_part2() {
         let mut memory = Memory::try_from((TEST_INPUT, (6, 6).into())).unwrap();
-        let byte = memory.solve2();
+        let byte = memory.part2().unwrap();
 
         assert_eq!(format!("{},{}", byte.x, byte.y), "6,1".to_string());
     }
