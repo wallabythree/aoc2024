@@ -1,9 +1,9 @@
 use crate::Solution;
 use crate::util::point::{ Direction::*, Point };
-use std::collections::{ BinaryHeap, HashMap, HashSet };
+use std::collections::{ BinaryHeap, HashMap, HashSet, VecDeque };
 use std::cmp::Reverse;
 
-pub const SOLUTION: Solution<Cost, Cost> = Solution { part1, part2 };
+pub const SOLUTION: Solution<Cost, usize> = Solution { part1, part2 };
 
 type Cost = u64;
 
@@ -17,30 +17,32 @@ struct Graph {
 impl Graph {
     fn neighbour(&self, pos: Point<i64>, dir: Point<i64>) -> Option<Point<i64>> {
         let neighbour = pos + dir;
-
-        if self.nodes.contains(&neighbour) {
-            Some(neighbour)
-        } else {
-            None
-        }
+        self.nodes.get(&neighbour).copied()
     }
 
-    fn dijkstra(&self, start: Point<i64>) -> HashMap<Point<i64>, Cost> {
+    fn dijkstra(&self, start: Point<i64>) -> (HashMap<(Point<i64>, Point<i64>), Cost>, HashMap<(Point<i64>, Point<i64>), HashSet<(Point<i64>, Point<i64>)>>) {
         let mut queue = BinaryHeap::new();
         queue.push(Reverse((0, start, East.into())));
 
-        let mut costs: HashMap<Point<i64>, Cost> = self
+        let mut costs: HashMap<(Point<i64>, Point<i64>), Cost> = self
             .nodes
             .iter()
-            .map(|&node| (node, Cost::MAX))
+            .flat_map(|&node|
+                [North.into(), East.into(), South.into(), West.into()]
+                    .iter()
+                    .map(|&dir| ((node, dir), Cost::MAX)).collect::<Vec<_>>()
+            )
             .collect();
 
         let mut visited: HashSet<(Point<i64>, Point<i64>)> = HashSet::new();
+        let mut prev: HashMap<(Point<i64>, Point<i64>), HashSet<(Point<i64>, Point<i64>)>> = HashMap::new();
 
-        costs.insert(start, 0);
-        visited.insert((start, East.into()));
+        costs.insert((start, East.into()), 0);
 
         while let Some(Reverse((cost, node, dir))) = queue.pop() {
+            if visited.contains(&(node, dir)) {
+                continue;
+            }
             visited.insert((node, dir));
 
             let edges = [
@@ -53,25 +55,83 @@ impl Graph {
                 let new_cost = cost + n_cost;
 
                 if let Some(neighbour) = neighbour_opt {
-                    if visited.contains(&(neighbour, n_dir)) {
-                        continue;
+                    let &current_cost = costs.get(&(neighbour, n_dir)).unwrap();
+
+                    if new_cost < current_cost {
+                        costs.insert((neighbour, n_dir), new_cost);
                     }
 
-                    if let Some(&current_cost) = costs.get(&neighbour) {
-                        if current_cost > new_cost {
-                            costs.insert(neighbour, new_cost);
-                        }
-
-                        queue.retain(|&Reverse((_, node, dir))| {
-                            node != neighbour || dir != n_dir
-                        });
-                        queue.push(Reverse((new_cost, neighbour, n_dir)));
+                    if new_cost <= current_cost {
+                        prev.entry((neighbour, n_dir)).or_default().insert((node, dir));
                     }
+
+                    queue.push(Reverse((new_cost, neighbour, n_dir)));
                 }
             }
         }
 
+        (costs, prev)
+    }
+
+    fn shortest_path_len(&self) -> Cost {
+        let (costs, _) = self.dijkstra(self.start);
+
         costs
+            .iter()
+            .filter(|(&(node, _), _)| node == self.end)
+            .map(|(_, &cost)| cost)
+            .min()
+            .unwrap()
+    }
+
+    fn shortest_paths(&self) -> usize {
+        let (costs, prevs) = self.dijkstra(self.start);
+
+        let mut ends: Vec<_> = costs
+            .iter()
+            .filter(|(&(node, _), _)| node == self.end)
+            .map(|((_, dir), cost)| (cost, dir))
+            .collect();
+
+        ends.sort();
+        let shortest_path_len = *ends[0].0;
+
+        let dirs: HashSet<Point<i64>> = ends
+            .iter()
+            .take_while(|(&cost, _)| cost == shortest_path_len)
+            .map(|(_, &dir)| dir)
+            .collect();
+
+        println!("{:?}", dirs);
+
+        let mut queue: VecDeque<(Point<i64>, Point<i64>)> = prevs
+            .iter()
+            .filter(|(&(node, dir), _)| node == self.end && dirs.contains(&dir))
+            .flat_map(|(_, prev)| prev.clone())
+            .collect();
+
+        let mut edges = HashSet::new();
+
+        while let Some((node, dir)) = queue.pop_front() {
+            if edges.contains(&(node, dir)) {
+                continue;
+            }
+            edges.insert((node, dir));
+            println!("{:?}", node);
+
+            if let Some(to_queue) = prevs.get(&(node, dir)) {
+                for &prev in to_queue {
+                    queue.push_back(prev);
+                }
+            }
+        }
+
+        let nodes: HashSet<Point<i64>> = edges
+            .iter()
+            .map(|&(node, _)| node)
+            .collect();
+
+        nodes.len() + 1
     }
 }
 
@@ -101,7 +161,7 @@ impl TryFrom<&str> for Graph {
         }
 
         let start = start_opt.ok_or("Start not found")?;
-        let end = end_opt.ok_or("Start not found")?;
+        let end = end_opt.ok_or("End not found")?;
 
         Ok( Self { nodes, start, end } )
     }
@@ -110,14 +170,21 @@ impl TryFrom<&str> for Graph {
 fn part1(input: &str) -> Cost {
     let graph: Graph = Graph::try_from(input).unwrap();
 
-    let result = graph.dijkstra(graph.start);
-    let end_cost = result.get(&graph.end);
+    let result = graph.dijkstra(graph.start).0;
+    //let end_cost = result.get(&graph.end);
+    let end = result
+        .iter()
+        .filter(|((node, _), _)| *node == graph.end)
+        .collect::<Vec<_>>();
 
-    *end_cost.unwrap()
+    println!("{:?}", end);
+
+    graph.shortest_path_len()
 }
 
-fn part2(input: &str) -> Cost {
-    input.len().try_into().unwrap()
+fn part2(input: &str) -> usize {
+    let graph: Graph = Graph::try_from(input).unwrap();
+    graph.shortest_paths()
 }
 
 #[cfg(test)]
@@ -168,6 +235,7 @@ mod tests {
 
     #[test]
     fn test_part2() {
-        assert_eq!(part2(TEST_INPUT_1), TEST_INPUT_1.len().try_into().unwrap());
+        assert_eq!(part2(TEST_INPUT_1), 45);
+        assert_eq!(part2(TEST_INPUT_2), 64);
     }
 }
