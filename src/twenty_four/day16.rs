@@ -102,8 +102,6 @@ impl Graph {
             .map(|(_, &dir)| dir)
             .collect();
 
-        println!("{:?}", dirs);
-
         let mut queue: VecDeque<(Point<i64>, Point<i64>)> = prevs
             .iter()
             .filter(|(&(node, dir), _)| node == self.end && dirs.contains(&dir))
@@ -117,7 +115,6 @@ impl Graph {
                 continue;
             }
             edges.insert((node, dir));
-            println!("{:?}", node);
 
             if let Some(to_queue) = prevs.get(&(node, dir)) {
                 for &prev in to_queue {
@@ -169,16 +166,6 @@ impl TryFrom<&str> for Graph {
 
 fn part1(input: &str) -> Cost {
     let graph: Graph = Graph::try_from(input).unwrap();
-
-    let result = graph.dijkstra(graph.start).0;
-    //let end_cost = result.get(&graph.end);
-    let end = result
-        .iter()
-        .filter(|((node, _), _)| *node == graph.end)
-        .collect::<Vec<_>>();
-
-    println!("{:?}", end);
-
     graph.shortest_path_len()
 }
 
