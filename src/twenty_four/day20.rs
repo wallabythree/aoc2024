@@ -17,6 +17,7 @@ impl Racetrack {
             .iter()
             .map(|&dir| pos + dir.into())
             .filter(|&pos| self.grid.in_bounds(pos))
+            .filter(|&pos| self.grid.get(pos).is_some_and(|&c| c != '#'))
             .collect()
     }
 
@@ -24,8 +25,6 @@ impl Racetrack {
         &self,
         start: Point<i64>,
         goal: Point<i64>,
-        max_depth: Option<usize>,
-        cheat: bool,
     ) -> Option<HashMap<Point<i64>, usize>> {
         let mut level = VecDeque::new();
         let mut frontier = VecDeque::new();
@@ -41,17 +40,7 @@ impl Racetrack {
                 return Some(visited);
             }
 
-            let neighbours: Vec<Point<i64>> = self
-                .neighbours(node)
-                .iter()
-                .copied()
-                .filter(|&pos| {
-                    let &c = self.grid.get(pos).unwrap();
-                    pos == goal || (if cheat { c == '#' } else { c != '#' })
-                })
-                .collect();
-
-            for neighbour in neighbours {
+            for neighbour in self.neighbours(node) {
                 if visited.contains_key(&neighbour) {
                     continue;
                 }
@@ -60,10 +49,6 @@ impl Racetrack {
             }
 
             if level.is_empty() {
-                if max_depth.is_some_and(|max_depth| depth == max_depth) {
-                    return None;
-                }
-
                 level = frontier;
                 frontier = VecDeque::new();
                 depth += 1;
@@ -77,7 +62,7 @@ impl Racetrack {
         &self,
         cheat_depth: usize
     ) -> Option<BTreeMap<usize, usize>> {
-        let path = self.bfs(self.start, self.end, None, false)?;
+        let path = self.bfs(self.start, self.end)?;
         let full_cost = path.get(&self.end).copied()?;
 
         let mut cheats: BTreeMap<usize, usize> =
