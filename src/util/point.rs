@@ -90,6 +90,21 @@ impl<T: Integer + Copy + CheckedAdd> Point<T> {
     }
 }
 
+impl<T: Integer + Copy + Into<i128> + NumCast>  Point<T> {
+    pub fn manhattan<U>(&self, rhs: Point<U>) -> T
+    where
+        U: Integer + Copy + Into<i128>,
+        i128: From<T> + From<U> + TryInto<T>
+    {
+        let x = <i128 as From<T>>::from(self.x);
+        let y = <i128 as From<T>>::from(self.y);
+        let rhs_x = <i128 as From<U>>::from(rhs.x);
+        let rhs_y = <i128 as From<U>>::from(rhs.y);
+
+        T::from((x - rhs_x).abs() + (y - rhs_y).abs()).unwrap()
+    }
+}
+
 impl<T: Integer + Copy + CheckedSub> Point<T> {
     pub fn checked_sub<U>(&self, rhs: Point<U>) -> Option<Self>
     where U: Integer + Copy + CheckedSub + TryFrom<T> + TryInto<T>
@@ -168,6 +183,18 @@ impl<E> Grid<E> {
         } else {
             self.tiles[0].len()
         }
+    }
+
+    pub fn get<T>(&self, p: Point<T>) -> Option<&E>
+    where T: Integer + Copy + TryInto<usize> + CheckedAdd {
+        if !self.in_bounds(p) {
+            return None;
+        }
+
+        let (x, y) = p.usized().ok()?;
+        let e = &self.tiles[y][x];
+
+        Some(e)
     }
 
     pub fn in_bounds<T>(&self, p: Point<T>) -> bool
