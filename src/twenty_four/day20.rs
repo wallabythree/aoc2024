@@ -1,6 +1,6 @@
 use crate::Solution;
 use crate::util::point::{ Direction::*, Grid, Point };
-use std::collections::{ BTreeMap, HashMap, VecDeque };
+use std::collections::{ HashMap, VecDeque };
 
 pub const SOLUTION: Solution<usize, usize> = Solution { part1, part2 };
 
@@ -16,8 +16,10 @@ impl Racetrack {
         [North, East, South, West]
             .iter()
             .map(|&dir| pos + dir.into())
-            .filter(|&pos| self.grid.in_bounds(pos))
-            .filter(|&pos| self.grid.get(pos).is_some_and(|&c| c != '#'))
+            .filter(|&pos|
+                self.grid.in_bounds(pos) &&
+                self.grid.get(pos).is_some_and(|&c| c != '#')
+            )
             .collect()
     }
 
@@ -61,12 +63,11 @@ impl Racetrack {
     fn find_cheats(
         &self,
         cheat_depth: usize
-    ) -> Option<BTreeMap<usize, usize>> {
+    ) -> Option<HashMap<usize, usize>> {
         let path = self.bfs(self.start, self.end)?;
         let full_cost = path.get(&self.end).copied()?;
 
-        let mut cheats: BTreeMap<usize, usize> =
-            BTreeMap::new();
+        let mut cheats: HashMap<usize, usize> = HashMap::new();
 
         for (&cheat_start, &start_depth) in &path {
             for (&cheat_end, &end_depth) in &path {
@@ -99,7 +100,8 @@ impl Racetrack {
         let cheats = self.find_cheats(cheat_depth)?;
 
         let count = cheats
-            .range(minimum_savings..)
+            .iter()
+            .filter(|(&savings, _)| savings >= minimum_savings)
             .map(|(_, cheats)| cheats)
             .sum();
 
